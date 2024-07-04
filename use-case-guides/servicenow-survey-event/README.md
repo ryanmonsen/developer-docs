@@ -174,7 +174,7 @@ Once you have saved the Event, click back into it. You will see an **Event ID**.
 At this time, it's important to stop and test what we have built so far.
 
 You should have:
-* A Moveworks system property with your bearer auth token
+* A System Property in ServiceNow with your Moveworks bearer auth token
 * A Script Include in ServiceNow to send Events through
 * A Moveworks Event ID
 
@@ -233,7 +233,7 @@ recipients = Object.keys(recipients);
 ```
 This next block of code shown above checks each survey. For each, we are validating the user has a valid email, adding it to an object called `recipients`, and then setting `recipients` to the object keys. The reason we are doing this is for de-duplication purposes and was originally provided by Moveworks within their survey reminder example.
 
-If, for whatever reason, your `user.email` field is not the field that is used to reconcile Moveworks accounts, please adjust the above code accordingly.
+If your `user.email` field is not the correct field to correlate users in Moveworks, please adjust the above code accordingly.
 
 ```javascript
 // We are passing along the recipients, message, and event_id into send_event_message.
@@ -250,8 +250,8 @@ This final block of code first builds the message using the instanceURL system p
 **Important message notes:**
 * If you do not have an associated query built to allow team members to query for their open surveys, remove the section of the message telling them that is an option.
 * Your Portal suffix and survey page may not be the same as shown! Replace `it?id=my_surveys` with the actual verified link to a page your users can access!
-* If you are sending other kinds of surveys than IT/HR tickets, adjust the wording appropriately.
-* Depending on the messaging platform you use, you may need to tweak this message (modify/remove HTML etcetera). The above functions correctly for Microsoft Teams but has not been validated on other platforms.
+* If you are sending other kinds of surveys than for IT/HR tickets, adjust the wording appropriately.
+* Depending on the messaging platform you use, you may need to tweak this message (modify/remove HTML or emoji). The above functions correctly for Microsoft Teams but has not been validated on other platforms.
 * You can return to the Fix Script we created above and try sending this message to yourself while making adjustments, to see how it looks in the messaging platform your company uses.
 
 
@@ -274,7 +274,7 @@ If you run into this issue and are unable to resolve it, you can move the entire
 You're almost done!
 
 Assuming you have been using an Update Set to capture your work in ServiceNow, you should have:
-* A system property called **moveworks.api.bearer_auth_token** (only if you did not already have this)
+* A System Property called **moveworks.api.bearer_auth_token** (only if you did not already have this)
 * A Script Include called **MoveworksApiSdk**
 * A Scheduled Job called something like **Weekly Survey Reminder to Moveworks** (this may not automatically be added to the Update Set - click "Add to Update Set")
 
@@ -286,4 +286,4 @@ Post-migration, ensure the Scheduled Job is actually scheduled. You may need to 
 
 Your users will receive a scheduled reminder if they have pending surveys in ServiceNow!
 
-You can now utilize the Script Include created to send all kinds of Events to your users via your Moveworks Chatbot. Think other Scheduled Jobs, Business Rules, Flow Actions... just make sure you keep track of your Recipients, Message, and Event ID for each!
+You can now utilize the Script Include created to send all kinds of ServiceNow-triggered Events to your users via your Moveworks Chatbot. Think other Scheduled Jobs, Business Rules, Flow Actions... just make sure you keep track of your Recipients, Message, and Event ID for each!
