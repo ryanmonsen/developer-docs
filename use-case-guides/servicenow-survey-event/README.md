@@ -231,7 +231,7 @@ while (gr.next()) {
 }
 recipients = Object.keys(recipients);
 ```
-This next block of code shown above checks each survey. For each, we are validating the user has a valid email, adding it to an object called `recipients`, and then setting `recipients` to the object keys. The reason we are doing this is for de-duplication purposes and was originally provided by Moveworks within their survey reminder example.
+This next block of code shown above checks each survey. For each, we are validating the user has a valid email, adding it to an Object called `recipients`, and then setting `recipients` to the Object keys (turning it into an Array). The reason we are doing this is for de-duplication purposes and was originally provided by Moveworks within their survey reminder example.
 
 If your `user.email` field is not the correct field to correlate users in Moveworks, please adjust the above code accordingly.
 
