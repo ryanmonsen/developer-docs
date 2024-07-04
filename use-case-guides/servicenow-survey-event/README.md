@@ -249,7 +249,7 @@ This final block of code first builds the message using the instanceURL system p
 
 **Important message notes:**
 * If you do not have an associated query built to allow team members to query for their open surveys, remove the section of the message telling them that is an option.
-* Your Portal suffix and survey page may not be the same as shown! Replace `it?id=my_surveys` with the actual verified link to a page your users can access!
+* Your Portal suffix and survey page may not be the same as in the message above! Replace `it?id=my_surveys` with the actual verified link to a page your users can access!
 * If you are sending other kinds of surveys than for IT/HR tickets, adjust the wording appropriately.
 * Depending on the messaging platform you use, you may need to tweak this message (modify/remove HTML or emoji). The above functions correctly for Microsoft Teams but has not been validated on other platforms.
 * You can return to the Fix Script we created above and try sending this message to yourself while making adjustments, to see how it looks in the messaging platform your company uses.
