@@ -11,7 +11,7 @@ difficulty_level: Intermediate
 # Introduction
 Using ServiceNow's Scheduled Jobs and Moveworks Creator Studio Events, we can send reminder notifications to users.
 
-Some knowledge of ServiceNow and JavaScript, including understanding of Script Includes and Scheduled Script Executions, is required.
+Some knowledge of ServiceNow and JavaScript, including understanding of Script Includes and Scheduled Script Executions, is required. You should have an **admin** role in ServiceNow. If you are not a ServiceNow admin, contact your ServiceNow development team to assist with this use case.
 
 # What are we building?
 
@@ -48,7 +48,7 @@ If you do not have this system property, create it now:
 
 ## ServiceNow Script Include for Event Calling
 
-If you have previously utilized the **moveworks.api.1.0.0** update set provided by Moveworks, you will be aware of the Script Include **MoveworksApiSdk** utilized for the legacy Messaging service. You may wish to extend the existing script include rather than creating a new one, so skip to Step 4 below.
+If you have previously utilized the **moveworks.api.1.0.0** update set provided by Moveworks, you will be aware of the Script Include **MoveworksApiSdk** utilized for the legacy Messaging service. This use case assumes you wish to extend the existing script include rather than creating a new one, so skip to Step 4 below.
 
 **Step 1:** Navigate to your **Script Includes** (sys_script_include) table.
 
@@ -107,7 +107,7 @@ This function takes a method (post, in our case), path (which we will construct 
     },
 ```
 
-This is the function that will be called by any Scheduled Job or other future method you use to trigger Moveworks Events from ServiceNow. It takes an array of recipients, a string message, and the Moveworks Event ID. It will first check whether there are more than 500 recipients - if there are, it will pass the information to `this.send_event_message_bulk` (which we will create next). Otherwise, it will call `this.request` which was created above.
+Above is the function that will be called by any Scheduled Job or other future method you use to trigger Moveworks Events from ServiceNow. It takes an array of recipients, a string message, and the Moveworks Event ID. It will first check whether there are more than 500 items in the `recipients` array - if there are, it will pass the information to `this.send_event_message_bulk` (which we will create next). Otherwise, it will call `this.request` which was created above.
 
 ```javascript
     send_event_message_bulk: function(recipients, msg, event_id) {
@@ -148,10 +148,10 @@ This is the function that will be called by any Scheduled Job or other future me
     },
 ```
 
-This function performs the same as the above, except that it splices the recipients array into sets of 500 users, and calls the Events API once for each set of up to 500 users.
+This function performs the same as the previous, except that it splices the `recipients` array into groups of 500 users, and calls the Events API once for each group of up to 500 users.
 
 
-Below is an image of how the functions slot into the script include prototype, for visual reference. (Note: `send_message` is legacy - you didn't miss anything. You will only have this function if you were modifying the Moveworks-provided Script Include from the **moveworks.api.1.0.0** Update Set.)
+Below is an image of how the functions slot into the script include prototype, for visual reference. (Note that `send_message` is legacy - you didn't miss anything. You will only have this function if you were modifying the Moveworks-provided Script Include from the **moveworks.api.1.0.0** Update Set.)
 
 ![script include](images/image_003.png)
 
@@ -163,7 +163,7 @@ At this time, we are not adding follow-up actions, and you may choose to show or
 
 You will probably wish to restrict launch to only your own email at this time, for testing purposes.
 
-Once you have saved the Event, click back into it. You will see an **Event ID**. Copy this - we will be using it for testing purposes.
+Once you have saved the Event, click back into it. You will see an **Event ID**. Copy this - we will need it for future steps.
 
 ![event ID location](images/image_002.png)
 
@@ -188,7 +188,7 @@ var client = new global.MoveworksApiSdk();
 client.send_event_message(recipients, message, event_id);
 ```
 
-Running this Fix Script will send a message from your Moveworks Chatbot to you with the message "Hello world!" If this has functioned as expected, you have successfully built a templated method to send Events calls to Moveworks via ServiceNow. Our Scheduled Job to send survey reminders, and any other notifications you may wish to send via ServiceNow, will function by calling our new Script Include.
+Running this Fix Script will send a message from your Moveworks Chatbot to you with the message "Hello world!" If this has functioned as expected, you have successfully built a templated method to send Events calls to Moveworks via ServiceNow. Our Scheduled Job to send survey reminders, and any other Event-based notifications you may wish to send via ServiceNow, will function by calling our new Script Include.
 
 ## Scheduled Job
 
@@ -231,6 +231,8 @@ recipients = Object.keys(recipients);
 ```
 This next block of code shown above checks each survey. For each, we are validating the user has a valid email, adding it to an object called `recipients`, and then setting `recipients` to the object keys. The reason we are doing this is for de-duplication purposes and was originally provided by Moveworks within their survey reminder example.
 
+If, for whatever reason, your `user.email` field is not the field that is used to reconcile Moveworks accounts, please adjust the above code accordingly.
+
 ```javascript
 // We are passing along the recipients, message, and event_id into send_event_message.
 var instanceURL = gs.getProperty('glide.servlet.uri');
@@ -241,14 +243,19 @@ var client = new global.MoveworksApiSdk();
 client.send_event_message(recipients, message, event_id);
 ```
 
-This final block of code first builds the message using the instanceURL system property (you should already have this out of box).
+This final block of code first builds the message using the instanceURL system property (you should already have this out of box). It then calls our Script Include and the Event message is sent to the recipients.
 
 **Important message notes:**
 * If you do not have an associated query built to allow team members to query for their open surveys, remove the section of the message telling them that is an option.
 * Your Portal suffix and survey page may not be the same as shown! Replace `it?id=my_surveys` with the actual verified link to a page your users can access!
-* If you are sending other kinds of surveys than IT/HR, adjust the wording appropriately!
+* If you are sending other kinds of surveys than IT/HR tickets, adjust the wording appropriately.
 * Depending on the messaging platform you use, you may need to tweak this message (modify/remove HTML etcetera). The above functions correctly for Microsoft Teams but has not been validated on other platforms.
 * You can return to the Fix Script we created above and try sending this message to yourself while making adjustments, to see how it looks in the messaging platform your company uses.
+
+
+Your Scheduled Job will end up looking something like the below. The below example has two Event IDs to distinguish between Production and Sandbox reminders for testing purposes.
+
+![scheduled job](images/image_004.png)
 
 ## Stop and Test
 
@@ -258,21 +265,23 @@ Click "Execute Now" to execute your Scheduled Job immediately.
 
 It's important to note at this time that there seems to be a configuration on the Moveworks end regarding whether Events will be sent at all, if the Recipients list contains users who are not part of the Selected Users for Launch. Please check with your Customer Success Team about this if you are testing this Scheduled Job and it is not being sent to you.
 
-If you run into this issue and are unable to resolve it, you can move the entire code of your Scheduled Job into the Fix Script we created, adding an additional query of `gr.addQuery("user","<your sys_user.sys_id>");`, and then try running it.
+If you run into this issue and are unable to resolve it, you can move the entire code of your Scheduled Job into the Fix Script we created, adding an additional query of `gr.addQuery("user","<your sys_user.sys_id>");`, and then try running it. (This additional query will ensure the only surveys fetched are your own.)
 
 ## Final Steps
 
 You're almost done!
 
 Assuming you have been using an Update Set to capture your work in ServiceNow, you should have:
-* A system property called moveworks.api.bearer_auth_token
-* A Script Include called MoveworksApiSdk
-* A Scheduled Job called something like Weekly Survey Reminder to Moveworks (this may not automatically be added to the Update Set - click "Add to Update Set"
+* A system property called **moveworks.api.bearer_auth_token** (only if you did not already have this)
+* A Script Include called **MoveworksApiSdk**
+* A Scheduled Job called something like **Weekly Survey Reminder to Moveworks** (this may not automatically be added to the Update Set - click "Add to Update Set")
 
 Make sure you update your Moveworks Event to Launch to All Users, and migrate your Update Set to your production ServiceNow instance.
 
+Post-migration, ensure the Scheduled Job is actually scheduled. You may need to flip its Active state off and on again to ensure it schedules itself.
+
 # Congratulations
 
-Your users will now receive a scheduled reminder if they have pending surveys in ServiceNow!
+Your users will receive a scheduled reminder if they have pending surveys in ServiceNow!
 
 You can now utilize the Script Include created to send all kinds of Events to your users via your Moveworks Chatbot. Think other Scheduled Jobs, Business Rules, Flow Actions... just make sure you keep track of your Recipients, Message, and Event ID for each!
