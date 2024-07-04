@@ -50,6 +50,8 @@ If you do not have this system property, create it now:
 
 If you have previously utilized the **moveworks.api.1.0.0** update set provided by Moveworks, you will be aware of the Script Include **MoveworksApiSdk** utilized for the legacy Messaging service. This use case assumes you wish to extend the existing script include rather than creating a new one, so skip to Step 4 below.
 
+If you do not have this Script Include, start here to create it.
+
 **Step 1:** Navigate to your **Script Includes** (sys_script_include) table.
 
 **Step 2:** Create a new Script Include called **MoveworksApiSdk**.
